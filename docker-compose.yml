@@ -1,15 +1,5 @@
 version: '3'
 services:
-  app:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
-    volumes:
-      - ./app:/var/www/html
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
   db:
     image: mysql:latest
     environment:
@@ -19,3 +9,18 @@ services:
       MYSQL_ROOT_PASSWORD: root
     ports:
       - "3306:3306"
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    volumes:
+      - ./app/laravel:/var/www/html
+      - vendor:/var/www/html/vendor # 重要1:volumeを分けないとマウントの際に、イメージ内にインストールしたvendorフォルダが削除されるため 
+    ports:
+      - "8000:8000"
+    command: /bin/bash -c "php artisan migrate:refresh --seed --force && php artisan serve --host 0.0.0.0"
+    depends_on:
+      - db
+
+volumes:
+    vendor: # 重要1:
